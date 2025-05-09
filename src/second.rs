@@ -5,10 +5,6 @@ pub struct List {
 }
 
 type Link = Option<Box<Node>>;
-// enum Link {
-//     Empty,
-//     More(Box<Node>),
-// }
 
 struct Node {
     elem: i32,
