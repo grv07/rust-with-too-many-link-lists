@@ -32,6 +32,21 @@ impl<T> List<T> {
             }
         }
     }
+
+    pub fn peek(&self) -> Option<&T> {
+        if let Some(head) = &self.head {
+            return Some(&head.elem);
+        }
+        None
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        if let Some(head) = &mut self.head {
+            return Some(&mut head.elem);
+        }
+
+        None
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -51,12 +66,21 @@ mod test {
     #[test]
     fn basics() {
         let mut list = List::<i32>::new();
+
         list.push(1);
         list.push(2);
         list.push(3);
 
-        assert_eq!(list.pop(), Some(3));
+        assert_eq!(list.peek(), Some(&3));
+        assert_eq!(list.peek_mut(), Some(&mut 3));
+
+        list.peek_mut().map(|v| {
+            *v = 90;
+        });
+
+        assert_ne!(list.pop(), Some(3));
         assert_eq!(list.pop(), Some(2));
+
         assert_eq!(list.pop(), Some(1));
 
         assert_eq!(list.pop(), None);
