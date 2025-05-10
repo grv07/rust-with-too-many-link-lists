@@ -93,6 +93,35 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
+pub struct MutIter<'a, T> {
+    next: Option<&'a mut Node<T>>,
+}
+
+impl<T> List<T> {
+    pub fn mut_iter(&mut self) -> MutIter<T> {
+        MutIter {
+            next: self.head.as_mut().map(|node| node.as_mut()),
+        }
+    }
+}
+
+impl<'a, T> Iterator for MutIter<'a, T>
+where
+    T: std::fmt::Debug,
+{
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next.take() {
+            Some(node) => {
+                self.next = node.next.as_deref_mut();
+                Some(&mut node.elem)
+            }
+            None => None,
+        }
+    }
+}
+
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut next_node = self.head.take();
@@ -166,5 +195,23 @@ mod test {
         assert_eq!(iter.next(), Some(&2));
         assert_eq!(iter.next(), Some(&1));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn mut_iter() {
+        let mut list = List::<i32>::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.mut_iter();
+
+        assert_eq!(iter.next(), Some(&mut 3));
+        assert_eq!(iter.next(), Some(&mut 2));
+        assert_eq!(iter.next(), Some(&mut 1));
+        assert_eq!(iter.next(), None);
+
+        let mut iter = list.mut_iter();
+        assert_eq!(iter.next(), Some(&mut 3));
     }
 }
