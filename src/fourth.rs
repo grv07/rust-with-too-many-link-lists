@@ -26,6 +26,22 @@ struct List<T> {
     tail: Link<T>,
 }
 
+pub struct IntoIter<T>(List<T>);
+
+impl<T> IntoIter<T> {
+    pub fn new(list: List<T>) -> Self {
+        Self(list)
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop_front()
+    }
+}
+
 impl<T> List<T> {
     pub fn new() -> Self {
         Self {
@@ -89,7 +105,7 @@ impl<T> List<T> {
                     self.tail = Some(new_tail);
                 }
                 None => {
-                    self.head = None;
+                    self.head.take();
                 }
             }
             Rc::try_unwrap(old_tail).ok().unwrap().into_inner().elem
@@ -123,6 +139,8 @@ impl<T> List<T> {
 
 #[cfg(test)]
 mod test {
+    use super::IntoIter;
+
     use super::List;
 
     #[test]
@@ -193,5 +211,24 @@ mod test {
         assert_eq!(list.pop_front(), Some(1));
 
         assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn into_iter() {
+        let mut list = List::new();
+
+        assert!(list.peek_front().is_none());
+
+        list.push_front(1);
+        list.push_front(2);
+        list.push_front(3);
+        list.push_front(4);
+
+        let mut into_iter = IntoIter::new(list);
+        assert_eq!(into_iter.next(), Some(4));
+        assert_eq!(into_iter.next(), Some(3));
+        assert_eq!(into_iter.next(), Some(2));
+        assert_eq!(into_iter.next(), Some(1));
+        assert_eq!(into_iter.next(), None);
     }
 }
